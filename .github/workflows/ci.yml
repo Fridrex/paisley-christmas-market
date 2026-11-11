@@ -4,7 +4,8 @@ on: [push, pull_request]
 
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    container: mcr.microsoft.com/playwright:v1.65.0-noble
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: actions/setup-node@v7.1.0
@@ -16,5 +17,4 @@ jobs:
       - run: npm run typecheck
       - run: npm run test:payments
       - run: npm run build
-      - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
