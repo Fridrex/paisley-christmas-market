@@ -99,6 +99,8 @@ Vercel’s published processor DPA applies to Pro and Enterprise plans. For Hobb
 
 ## Verification
 
+Use [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) for commit messages. CI checks commit subjects on pushes and pull requests.
+
 ```sh
 npm run lint
 npm run typecheck

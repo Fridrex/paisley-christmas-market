@@ -8,6 +8,20 @@ jobs:
     container: mcr.microsoft.com/playwright:v1.65.0-noble
     steps:
       - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Check Conventional Commit subjects
+        shell: bash
+        env:
+          CHECKED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          git log --format='%h%x09%s' "$CHECKED_HEAD" | awk -F '\t' '
+            $2 !~ /^[A-Za-z][A-Za-z0-9-]*(\([^()[:cntrl:]]+\))?!?: [^[:space:]]/ {
+              print "Non-conventional commit: " $1
+              failed = 1
+            }
+            END { exit failed }
+          '
       - uses: actions/setup-node@v7.1.0
         with:
           node-version: 26
