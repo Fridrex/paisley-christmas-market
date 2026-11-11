@@ -38,6 +38,7 @@ const RootLayout = ({ children }: Readonly<{ children: React.ReactNode }>) => {
             <nav aria-label="Footer navigation">
               <Link href="/plan-your-visit#access">Accessibility</Link>
               <Link href="/trade">Trading information</Link>
+              <Link href="/privacy">Privacy and cookies</Link>
               <Link href="/organiser">Organiser area</Link>
             </nav>
           </div>

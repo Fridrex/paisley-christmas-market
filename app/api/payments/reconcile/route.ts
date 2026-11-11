@@ -11,6 +11,9 @@ export const GET = async (request: Request) => {
   if (expected.length !== provided.length || !timingSafeEqual(expected, provided)) {
     return new Response(null, { status: 401 });
   }
-  const result = await reconcileOverdue(paymentServices());
-  return Response.json(result, { status: result.failed ? 500 : 200 });
+  const services = paymentServices();
+  const result = await reconcileOverdue(services);
+  const { data: removed, error } = await services.db.rpc('purge_expired_demo_data');
+  if (error) console.error('Demo data retention job failed', { code: error.code });
+  return Response.json({ ...result, removed: removed ?? 0 }, { status: result.failed || error ? 500 : 200 });
 };

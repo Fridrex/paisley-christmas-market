@@ -1,4 +1,5 @@
 import { categories, type Category } from './market-data';
+import { isDemoEmail } from './privacy';
 
 export const applicationStatuses = {
   submitted: 'Submitted',
@@ -48,8 +49,8 @@ export const readProfile = (form: FormData) => {
   if (draft.description.length < 10 || draft.description.length > 500) {
     errors.description = 'Describe what you sell in 10 to 500 characters.';
   }
-  if (draft.contact_email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.contact_email)) {
-    errors.contact_email = 'Enter a valid contact email address.';
+  if (draft.contact_email.length > 254 || !isDemoEmail(draft.contact_email)) {
+    errors.contact_email = 'Use a fictional address ending in @example.test.';
   }
   return { draft, category, errors };
 };

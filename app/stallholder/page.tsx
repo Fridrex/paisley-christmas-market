@@ -34,6 +34,7 @@ const StallholderPage = async ({ searchParams }: { searchParams: SearchParams })
         {first(params.notice) === 'organiser-access' && <p role="alert">Your account needs an organiser membership for this season.</p>}
         <p className="intro">Apply for a stall and check your applications.</p>
         <Link className="text-action" href="/stallholder/profile">Edit business profile</Link>
+        {' · '}<Link className="text-action" href="/stallholder/privacy">Your data and privacy requests</Link>
       </div>
       <div className="two-columns">
         {available.length > 0

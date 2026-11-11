@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { createSessionClient } from '@/lib/supabase/server';
+import { isDemoEmail, localDemoRegistration } from '@/lib/privacy';
 
 export type SignInState = { error?: string; notice?: string };
 
@@ -13,6 +14,8 @@ export const signIn = async (_state: SignInState, form: FormData): Promise<SignI
   if (!email || !password) return { error: 'Enter your email address and password.' };
   const area = form.get('area') === 'organiser' ? 'organiser' : 'stallholder';
   if (form.get('intent') === 'register' && area === 'stallholder') {
+    if (!localDemoRegistration()) return { error: 'Use the demo account issued for this coursework.' };
+    if (!isDemoEmail(email)) return { error: 'Use a fictional address ending in @example.test.' };
     if (password.length < 8) return { error: 'Use a password with at least 8 characters.' };
     const base = process.env.APP_URL ?? 'http://localhost:3000';
     const { data, error } = await db.auth.signUp({

@@ -9,6 +9,7 @@ import { getPeriods } from '@/lib/market';
 import { first, formatPrice, seasonSlug, type SearchParams } from '@/lib/market-data';
 import { paymentsConfigured } from '@/lib/payments/service';
 import { requireAccount } from '@/lib/supabase/server';
+import { ListingPermissionForm } from './publication';
 
 export const metadata: Metadata = { title: 'Your stall application', robots: { index: false } };
 
@@ -25,8 +26,9 @@ const StallholderApplicationPage = async ({ params, searchParams }: {
 }) => {
   const [{ id }, { db, userId }, search] = await Promise.all([params, requireAccount('stallholder'), searchParams]);
   if (!isUuid(id)) notFound();
-  const { data, error } = await db.from('applications').select(applicationColumns).eq('id', id)
-    .eq('season_slug', seasonSlug).eq('trader_id', userId).maybeSingle<Application>();
+  const { data, error } = await db.from('applications').select(`${applicationColumns},listing_permission_at,listing_withdrawn_at`).eq('id', id)
+    .eq('season_slug', seasonSlug).eq('trader_id', userId)
+    .maybeSingle<Application & { listing_permission_at: string | null; listing_withdrawn_at: string | null }>();
   if (error) throw new Error('Your application could not be loaded.');
   if (!data) notFound();
   const [periods, bookingResult] = await Promise.all([
@@ -73,6 +75,16 @@ const StallholderApplicationPage = async ({ params, searchParams }: {
           </BookingDetails>
         )}
       </div>
+      <section className="panel form-stack">
+        <h2>Public listing preview</h2>
+        <p>Your application and booking work either way. If you allow this, the organiser can publish the following details, plus your pitch and trading dates, once your booking is confirmed.</p>
+        <dl className="review-list">
+          <div><dt>Trading name</dt><dd>{data.business_name}</dd></div>
+          <div><dt>Category</dt><dd>{data.category}</dd></div>
+          <div><dt>Description</dt><dd>{data.description}</dd></div>
+        </dl>
+        <ListingPermissionForm id={id} allowed={Boolean(data.listing_permission_at && !data.listing_withdrawn_at)} />
+      </section>
     </div>
   );
 };

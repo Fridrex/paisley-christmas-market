@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { first, type SearchParams } from '@/lib/market-data';
 import { supabaseConfig } from '@/lib/supabase/config';
+import { localDemoRegistration } from '@/lib/privacy';
 import { SignInForm } from './sign-in-form';
 
 export const metadata: Metadata = { title: 'Sign in', robots: { index: false } };
@@ -9,7 +10,8 @@ export const metadata: Metadata = { title: 'Sign in', robots: { index: false } }
 const SignInPage = async ({ searchParams }: { searchParams: SearchParams }) => {
   const params = await searchParams;
   const area = first(params.area) === 'organiser' ? 'organiser' : 'stallholder';
-  const register = area === 'stallholder' && first(params.mode) === 'register';
+  const registration = localDemoRegistration();
+  const register = registration && area === 'stallholder' && first(params.mode) === 'register';
 
   return (
     <div className="container section">
@@ -19,8 +21,9 @@ const SignInPage = async ({ searchParams }: { searchParams: SearchParams }) => {
       </div>
       {supabaseConfig() ? (
         <>
+          <p>{registration ? 'Use fictional details for this demo.' : 'Sign in with the demo account issued for this coursework.'} <Link href="/privacy">Privacy and cookies</Link></p>
           <SignInForm area={area} register={register} key={`${area}-${register}`} />
-          {area === 'stallholder' && (
+          {area === 'stallholder' && registration && (
             <Link className="text-action" href={register ? '/sign-in' : '/sign-in?mode=register'}>
               {register ? 'Already registered? Sign in' : 'Create a stallholder account'}
             </Link>

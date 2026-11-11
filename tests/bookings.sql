@@ -143,11 +143,13 @@ begin
 end;
 $$;
 
+select slug from public.trader_listings where season_slug = 'booking-tests' and name = 'First shop' \gset
+
 set local role anon;
 do $$
 begin
-  if (select count(*) from public.trader_listings where season_slug = 'booking-tests' and name = 'First shop') <> 1 then
-    raise exception 'Confirmed trader was not published exactly once';
+  if exists (select from public.trader_listings where season_slug = 'booking-tests') then
+    raise exception 'A booking published a trader without permission';
   end if;
   if not exists (select from public.programme_items where season_slug = 'booking-tests'
     and title = 'Test workshop' and status = 'changed' and previous_start = '11:00') then
@@ -155,16 +157,93 @@ begin
   end if;
 end;
 $$;
-select slug from public.trader_listings where season_slug = 'booking-tests' and name = 'First shop' \gset
 
 set local role authenticated;
+select set_config('test.listing_slug', :'slug', true);
 select set_config('request.jwt.claim.sub', '00000000-0000-4000-8200-000000000003', true);
-select public.set_listing_publication('booking-tests', :'slug', false);
+do $$
+begin
+  if public.set_listing_publication('booking-tests', current_setting('test.listing_slug'), true) then
+    raise exception 'Organiser could publish without permission';
+  end if;
+end;
+$$;
+select set_config('request.jwt.claim.sub', '00000000-0000-4000-8200-000000000002', true);
+do $$
+begin
+  if public.set_my_listing_permission(current_setting('test.first_app')::uuid, true) then
+    raise exception 'Another trader could authorise the listing';
+  end if;
+  if public.get_my_privacy_data()::text like '%First shop%' then
+    raise exception 'The privacy export contained another trader’s data';
+  end if;
+  if not public.request_privacy('erasure') or public.request_privacy('erasure') then
+    raise exception 'The open request was not created once';
+  end if;
+end;
+$$;
+select set_config('request.jwt.claim.sub', '00000000-0000-4000-8200-000000000001', true);
+do $$
+begin
+  if exists (select 1 from public.privacy_requests) then
+    raise exception 'The trader could see another account’s privacy request';
+  end if;
+  if public.get_my_privacy_data()->'applications'->0->>'id' is distinct from current_setting('test.first_app') then
+    raise exception 'The privacy export omitted the trader’s own application';
+  end if;
+  if not public.set_my_listing_permission(current_setting('test.first_app')::uuid, true) then
+    raise exception 'The trader could not authorise the listing';
+  end if;
+end;
+$$;
+select set_config('request.jwt.claim.sub', '00000000-0000-4000-8200-000000000003', true);
+select public.set_listing_publication('booking-tests', :'slug', true);
+set local role anon;
+do $$
+begin
+  if (select count(*) from public.trader_listings where season_slug = 'booking-tests') <> 1 then
+    raise exception 'An authorised trader was not published exactly once';
+  end if;
+end;
+$$;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-4000-8200-000000000001', true);
+select public.set_my_listing_permission(:'first_id', false);
+select set_config('request.jwt.claim.sub', '00000000-0000-4000-8200-000000000003', true);
+do $$
+begin
+  if public.set_listing_publication('booking-tests', current_setting('test.listing_slug'), true) then
+    raise exception 'Organiser could publish after withdrawal';
+  end if;
+end;
+$$;
 set local role anon;
 do $$
 begin
   if exists (select from public.trader_listings where season_slug = 'booking-tests') then
-    raise exception 'Hidden listing remained public';
+    raise exception 'The withdrawn listing remained public';
+  end if;
+end;
+$$;
+set local role service_role;
+do $$
+begin
+  if public.erase_demo_account('00000000-0000-4000-8200-000000000001') then
+    raise exception 'Erasure removed a confirmed future booking';
+  end if;
+  if not public.erase_demo_account('00000000-0000-4000-8200-000000000002') then
+    raise exception 'Erasure did not remove the expired demo booking and account';
+  end if;
+end;
+$$;
+reset role;
+do $$
+begin
+  if exists (select from auth.users where id = '00000000-0000-4000-8200-000000000002')
+    or exists (select from public.privacy_requests where user_id = '00000000-0000-4000-8200-000000000002')
+    or exists (select from public.bookings where id = current_setting('test.second_booking')::uuid)
+    or exists (select from public.stripe_events where id = 'evt_expired') then
+    raise exception 'Erasure left linked account, booking or event records';
   end if;
 end;
 $$;

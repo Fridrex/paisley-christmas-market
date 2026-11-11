@@ -17,6 +17,7 @@ const ProfilePage = async () => {
       <div className="page-heading">
         <h1>Business profile</h1>
         <p>Save your business details to use in future stall applications.</p>
+        <p>Use fictional details and a contact address ending in <code>@example.test</code>. <Link href="/privacy">Privacy notice</Link></p>
       </div>
       <ProfileForm profile={data ?? { business_name: '', category: '', description: '', contact_email: email }} />
     </div>

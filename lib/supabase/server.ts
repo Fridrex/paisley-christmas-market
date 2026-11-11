@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { cache } from 'react';
 import { seasonSlug } from '@/lib/market-data';
 import { supabaseConfig } from './config';
+import { sessionCookie, sessionCookieWrite } from './session-cookies';
 
 export const createSessionClient = async () => {
   const jar = await cookies();
@@ -11,11 +12,12 @@ export const createSessionClient = async () => {
   if (!config) return null;
 
   return createServerClient(config.url, config.key, {
+    cookieOptions: sessionCookie(),
     cookies: {
       getAll: () => jar.getAll(),
       setAll: (items) => {
         try {
-          for (const { name, value, options } of items) jar.set(name, value, options);
+          for (const { name, value, options } of items) jar.set(name, value, sessionCookieWrite(options));
         } catch {
           // Server components receive refreshed cookies from the proxy.
         }

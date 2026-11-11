@@ -1,6 +1,7 @@
 'use client';
 
 import { useActionState, useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 import { FormFeedback } from '@/components/form-feedback';
 import { ProfileFields } from '@/components/profile-fields';
 import { applicationFields, type ApplicationDraft, type ApplicationField, type ApplicationState } from '@/lib/applications';
@@ -31,6 +32,7 @@ export const ApplicationForm = ({ periods, defaults }: { periods: TradingPeriod[
     return (
       <form className="panel form-stack" action={action}>
         <h2 tabIndex={-1} ref={reviewTitle}>Check your answers</h2>
+        <p>The demo organiser can read this application. Public listing is optional and is managed separately. <Link href="/privacy">Privacy notice</Link></p>
         {state.error && <FormFeedback focusOn={state}>{state.error}</FormFeedback>}
         <dl className="review-list">
           {keys.map((key) => (
@@ -54,6 +56,7 @@ export const ApplicationForm = ({ periods, defaults }: { periods: TradingPeriod[
   return (
     <form method="post" className="panel form-stack" onSubmit={(event) => { event.preventDefault(); setReviewedAfter(state); }}>
       <h2>Stall application</h2>
+      <p>Use a fictional business and a contact address ending in <code>@example.test</code>. <Link href="/privacy">Privacy notice</Link></p>
       {fields && (
         <FormFeedback focusOn={state}>
           <strong>Check the following answers</strong>

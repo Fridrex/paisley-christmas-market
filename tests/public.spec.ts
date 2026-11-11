@@ -71,7 +71,15 @@ test('catalogue results stay still when reduced motion is enabled', async ({ pag
   await expect(page.getByRole('link', { name: 'The Fudge Room' })).toBeVisible();
 });
 
-for (const path of ['/', '/whats-on?day=2026-12-05', '/traders', '/traders/abbey-clay', '/plan-your-visit?stall=A01', '/trade', '/sign-in']) {
+test('the public privacy notice explains the demo without setting cookies', async ({ page, context }) => {
+  await page.goto('/');
+  await page.getByRole('link', { name: 'Privacy and cookies' }).click();
+  await expect(page.getByRole('heading', { name: 'Privacy and cookies', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'How long information stays' })).toBeVisible();
+  expect(await context.cookies()).toEqual([]);
+});
+
+for (const path of ['/', '/whats-on?day=2026-12-05', '/traders', '/traders/abbey-clay', '/plan-your-visit?stall=A01', '/trade', '/sign-in', '/privacy']) {
   test(`${path} has no horizontal overflow or automated WCAG AA violations at 320px`, async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 800 });
     await page.goto(path);
