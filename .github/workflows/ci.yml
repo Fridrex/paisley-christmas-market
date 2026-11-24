@@ -18,7 +18,7 @@ jobs:
         env:
           CHECKED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
-          git log --format='%h%x09%s' "$CHECKED_HEAD" | awk -F '\t' '
+          git -c safe.directory="$GITHUB_WORKSPACE" log --format='%h%x09%s' "$CHECKED_HEAD" | awk -F '\t' '
             $2 !~ /^[A-Za-z][A-Za-z0-9-]*(\([^()[:cntrl:]]+\))?!?: [^[:space:]]/ {
               print "Non-conventional commit: " $1
               failed = 1
